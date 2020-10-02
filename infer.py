@@ -20,13 +20,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import argparse
+
 import yaml
 import torch
 from tqdm import tqdm
 from sklearn.cluster import KMeans
+from omegaconf import OmegaConf
 from hydra.utils import instantiate
 
-from utils import show_tensor_images
+from modules.dataset import CityscapesDataset
+from utils import show_tensor_images, parse_config
 
 
 def parse_arguments():
@@ -94,17 +98,17 @@ def cluster(features, n_classes):
     return centroids
 
 
-def encode(label_map, centroids, n_features, device):
+def encode(inst_map, centroids, n_features, device):
     # sample feature vector centroids
-    b, _, h, w = label_map.shape
-    feature_map = torch.zeros((b, n_features, h, w), device=device).to(label_map.dtype)
+    b, _, h, w = inst_map.shape
+    feature_map = torch.zeros((b, n_features, h, w), device=device).to(inst_map.dtype)
 
-    for i in torch.unique(label_map):
+    for i in torch.unique(inst_map):
         label = int(label.flatten(0).item())
 
         if label in centroids.keys():
             centroid_idx = random.randint(0, centroids[label].shape[0] - 1)
-            idx = torch.nonzero(label_map == int(i), as_tuple=False)
+            idx = torch.nonzero(inst_map == int(i), as_tuple=False)
 
             feature = torch.from_numpy(centroids[label][centroid_idx, :]).to(device)
             feature_map[idx[:, 0], :, idx[:, 2], idx[:, 3]] = feature
@@ -116,6 +120,8 @@ def main():
     args = parse_arguments()
     with open(args.config, 'r') as f:
         config = yaml.safe_load(f)
+        config = OmegaConf.create(config)
+        config = parse_config(config)
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -128,25 +134,30 @@ def main():
 
     train_dataloader = torch.utils.data.DataLoader(
         instantiate(config.train_dataset),
-        collate_fn=dataset.CityscapesDataset.collate_fn,
+        collate_fn=CityscapesDataset.collate_fn,
         **config.train_dataloader,
     )
     test_dataloader = torch.utils.data.DataLoader(
         instantiate(config.test_dataset),
-        collate_fn=dataset.CityscapesDataset.collate_fn,
+        collate_fn=CityscapesDataset.collate_fn,
         **config.test_dataloader,
     )
 
     features = collect(train_dataloader, encoder, device)
     centroids = cluster(features, config.n_classes)
 
-    for (x, labels, _, bounds) in test_dataloader:
+    for (x, labels, insts, bounds) in test_dataloader:
         x = x.to(device)
         labels = labels.to(device)
+        insts = insts.to(device)
         bounds = bounds.to(device)
 
-        features = encode(labels, centroids, config.n_features, device)
+        features = encode(insts, centroids, config.n_features, device)
         x_fake = generator(torch.cat((labels, bounds, features), dim=1))
 
         show_tensor_images(x_fake.to(x.dtype))
         show_tensor_images(x)
+
+
+if __name__ == '__main__':
+    main()

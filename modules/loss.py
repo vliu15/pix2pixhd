@@ -24,7 +24,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from modules import VGG19
+from modules.networks import VGG19
 
 
 class Pix2PixHDLoss(nn.Module):

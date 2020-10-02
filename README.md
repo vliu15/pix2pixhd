@@ -13,4 +13,4 @@ By default, all checkpoints will be stored in `logs/YYYY-MM-DD_hh_mm_ss`, but th
 2. To train high-resolution models, edit the `pretrain_checkpoint` field in `configs/highres.yml` to reflect the desired pretrained checkpoints from `2.` and ryn `python train.py --config configs/highres.yml --high_res`.
 
 ### Inference
-1. Edit the `resume_checkpoint` field `configs/highres.yml` to reflect the desired high-res checkpoint from training.
+1. Edit the `resume_checkpoint` field `configs/highres.yml` to reflect the desired high-res checkpoint from training and run `python infer.py --config configs/highres.yml`.

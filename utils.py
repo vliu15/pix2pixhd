@@ -25,6 +25,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from torchvision.utils import make_grid
+from omegaconf import ListConfig
 
 
 def show_tensor_images(image_tensor, show_n=1):
@@ -34,6 +35,15 @@ def show_tensor_images(image_tensor, show_n=1):
     image_grid = make_grid(image_unflat[:show_n], nrow=show_n)
     plt.imshow(image_grid.permute(1, 2, 0).squeeze())
     plt.show()
+
+
+def parse_config(config):
+    ''' Parses any unaddressed fields from yaml config '''
+    if isinstance(config.generator.in_channels, ListConfig):
+        config.generator.in_channels = sum(config.generator.in_channels)
+    if isinstance(config.discriminator.in_channels, ListConfig):
+        config.discriminator.in_channels = sum(config.discriminator.in_channels)
+    return config
 
 
 def get_lr_lambda(epochs, decay_after):

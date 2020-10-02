@@ -4,7 +4,7 @@ n_features: &n_features 3           # number of feature maps from encoder
 rgb: &rgb 3                         # number of RGB channels
 
 train_dataset:
-    _target_: dataset.CityscapesDataset
+    _target_: modules.dataset.CityscapesDataset
     paths: [data/gtFine_trainvaltest/gtFine/train, data/leftImg8bit_trainvaltest/leftImg8bit/train]
     target_width: *target_width
     n_classes: *n_classes
@@ -15,7 +15,7 @@ train_dataloader:
     pin_memory: true
 
 val_dataset:
-    _target_: dataset.CityscapesDataset
+    _target_: modules.dataset.CityscapesDataset
     paths: [data/gtFine_trainvaltest/gtFine/val, data/leftImg8bit_trainvaltest/leftImg8bit/val]
     target_width: *target_width
     n_classes: *n_classes
@@ -27,7 +27,7 @@ val_dataloader:
     pin_memory: true
 
 test_dataset:
-    _target_: dataset.CitscapesDataset
+    _target_: modules.dataset.CityscapesDataset
     paths: [data/gtFine_trainvaltest/gtFine/test, data/leftImg8bit_trainvaltest/leftImg8bit/test]
     target_width: *target_width
     n_classes: *n_classes
@@ -40,7 +40,7 @@ test_dataloader:
     pin_memory: true
 
 generator:
-    _target_: modules.LocalEnhancer
+    _target_: modules.networks.LocalEnhancer
     in_channels: [*n_classes, *n_features, 1]
     out_channels: *rgb
     base_channels: 32
@@ -49,14 +49,14 @@ generator:
     local_res_blocks: 3
 
 discriminator:
-    _target_: modules.MultiscaleDiscriminator
+    _target_: modules.networks.MultiscaleDiscriminator
     in_channels: *rgb
     base_channels: 64
     n_layers: 3
     n_discriminators: 3
 
 encoder:
-    _target_: modules.Encoder
+    _target_: modules.networks.Encoder
     in_channels: *rgb
     out_channels: *n_features
     base_channels: 16

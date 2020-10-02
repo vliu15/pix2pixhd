@@ -28,11 +28,11 @@ import yaml
 import torch
 from tqdm import tqdm
 from hydra.utils import instantiate
-from omegaconf import OmegaConf, ListConfig
+from omegaconf import OmegaConf
 
-import dataset
-from loss import Pix2PixHDLoss
-from utils import get_lr_lambda, weights_init, freeze_encoder
+from modules.dataset import CityscapesDataset
+from modules.loss import Pix2PixHDLoss
+from utils import parse_config, get_lr_lambda, weights_init, freeze_encoder
 
 
 def parse_arguments():
@@ -40,14 +40,6 @@ def parse_arguments():
     parser.add_argument('-c', '--config', type=str, required=True)
     parser.add_argument('-r', '--high_res', action='store_true', default=False)
     return parser.parse_args()
-
-
-def parse_config(config):
-    if isinstance(config.generator.in_channels, ListConfig):
-        config.generator.in_channels = sum(config.generator.in_channels)
-    if isinstance(config.discriminator.in_channels, ListConfig):
-        config.discriminator.in_channels = sum(config.discriminator.in_channels)
-    return config
 
 
 def train(dataloaders, models, optimizers, schedulers, train_config, start_epoch, device, high_res):
@@ -196,12 +188,12 @@ def main():
 
     train_dataloader = torch.utils.data.DataLoader(
         instantiate(config.train_dataset),
-        collate_fn=dataset.CityscapesDataset.collate_fn,
+        collate_fn=CityscapesDataset.collate_fn,
         **config.train_dataloader,
     )
     val_dataloader = torch.utils.data.DataLoader(
         instantiate(config.val_dataset),
-        collate_fn=dataset.CityscapesDataset.collate_fn,
+        collate_fn=CityscapesDataset.collate_fn,
         **config.val_dataloader,
     )
 
@@ -210,7 +202,7 @@ def main():
         [encoder, generator, discriminator],
         [g_optimizer, d_optimizer],
         [g_scheduler, d_scheduler],
-        config.train, start_epoch, device,
+        config.train, start_epoch, device, args.high_res,
     )
 
 
