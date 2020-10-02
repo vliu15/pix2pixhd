@@ -1,5 +1,5 @@
 # Pix2PixHD
-Unofficial Pytorch implementation of Pix2PixHD, from [High-Resolution Image Synthesis and Semantic Manipulation with Conditional GANs](https://arxiv.org/abs/1711.11585) (Wang et al. 2018). Implementation for [Generative Adversarial Networks (GANs) Specialization](https://www.coursera.org/specializations/generative-adversarial-networks-gans) course.
+Unofficial Pytorch implementation of Pix2PixHD, from [High-Resolution Image Synthesis and Semantic Manipulation with Conditional GANs](https://arxiv.org/abs/1711.11585) (Wang et al. 2018). Implementation for [Generative Adversarial Networks (GANs) Specialization](https://www.coursera.org/specializations/generative-adversarial-networks-gans) course material.
 
 ## Usage
 1. Download the [Cityscapes dataset](https://www.cityscapes-dataset.com/), unzip the `gtFine_trainvaltest.zip` and `leftImg8bit_trainvaltest.zip` folders and move them to `data` directory.
