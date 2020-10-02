@@ -1,0 +1,76 @@
+target_width: &target_width 2048    # target width of cityscapes images
+n_classes: &n_classes 35            # number of object classes
+n_features: &n_features 3           # number of feature maps from encoder
+rgb: &rgb 3                         # number of RGB channels
+
+train_dataset:
+    _target_: dataset.CityscapesDataset
+    paths: [data/gtFine_trainvaltest/gtFine/train, data/leftImg8bit_trainvaltest/leftImg8bit/train]
+    target_width: *target_width
+    n_classes: *n_classes
+
+train_dataloader:
+    batch_size: 1
+    shuffle: true
+    pin_memory: true
+
+val_dataset:
+    _target_: dataset.CityscapesDataset
+    paths: [data/gtFine_trainvaltest/gtFine/val, data/leftImg8bit_trainvaltest/leftImg8bit/val]
+    target_width: *target_width
+    n_classes: *n_classes
+
+val_dataloader:
+    batch_size: 8
+    drop_last: false
+    shuffle: false
+    pin_memory: true
+
+test_dataset:
+    _target_: dataset.CitscapesDataset
+    paths: [data/gtFine_trainvaltest/gtFine/test, data/leftImg8bit_trainvaltest/leftImg8bit/test]
+    target_width: *target_width
+    n_classes: *n_classes
+
+# test dataloader only for high-res inference
+test_dataloader:
+    batch_size: 1
+    drop_last: false
+    shuffle: false
+    pin_memory: true
+
+generator:
+    _target_: modules.LocalEnhancer
+    in_channels: [*n_classes, *n_features, 1]
+    out_channels: *rgb
+    base_channels: 32
+    global_fb_blocks: 3
+    global_res_blocks: 9
+    local_res_blocks: 3
+
+discriminator:
+    _target_: modules.MultiscaleDiscriminator
+    in_channels: *rgb
+    base_channels: 64
+    n_layers: 3
+    n_discriminators: 3
+
+encoder:
+    _target_: modules.Encoder
+    in_channels: *rgb
+    out_channels: *n_features
+    base_channels: 16
+    n_layers: 4
+
+optim:
+    lr: 0.0002
+    betas: [0.5, 0.999]
+
+train:
+    epochs: 200
+    decay_after: 100
+    log_dir: logs
+    save_every: 1
+
+resume_checkpoint: null
+pretrain_checkpoint: null
