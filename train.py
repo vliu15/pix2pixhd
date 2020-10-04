@@ -56,15 +56,16 @@ def train(dataloaders, models, optimizers, schedulers, train_config, start_epoch
     os.makedirs(log_dir, mode=0o775, exist_ok=False)
 
     for epoch in range(start_epoch, train_config.epochs):
-        mean_g_loss = 0.0
-        mean_d_loss = 0.0
 
         # training epoch
+        mean_g_loss = 0.0
+        mean_d_loss = 0.0
+        epoch_steps = 0
         if not high_res:
             encoder.train()
         generator.train()
         discriminator.train()
-        pbar = tqdm(train_dataloader, position=0, desc='[G loss: -.----][D loss: -.----]')
+        pbar = tqdm(train_dataloader, position=0, desc='train [G loss: -.----][D loss: -.----]')
         for (x_real, labels, insts, bounds) in pbar:
             x_real = x_real.to(device)
             labels = labels.to(device)
@@ -84,12 +85,13 @@ def train(dataloaders, models, optimizers, schedulers, train_config, start_epoch
             d_loss.backward()
             d_optimizer.step()
 
-            mean_g_loss += g_loss.item() / len(train_dataloader)
-            mean_d_loss += d_loss.item() / len(train_dataloader)
+            mean_g_loss += g_loss.item()
+            mean_d_loss += d_loss.item()
+            epoch_steps += 1
 
-            pbar.set_description(desc=f'[G loss: {mean_g_loss:.4f}][D loss: {mean_d_loss:.4f}]')
+            pbar.set_description(desc=f'train [G loss: {mean_g_loss/epoch_steps:.4f}][D loss: {mean_d_loss/epoch_steps:.4f}]')
 
-        if train_config.save_every % epoch == 0:
+        if epoch+1 % train_config.save_every == 0:
             torch.save({
                 'e_state_dict': encoder.state_dict(),
                 'g_state_dict': generator.state_dict(),
@@ -101,15 +103,16 @@ def train(dataloaders, models, optimizers, schedulers, train_config, start_epoch
 
         g_scheduler.step()
         d_scheduler.step()
-        mean_g_loss = 0.0
-        mean_d_loss = 0.0
 
         # validation epoch
+        mean_g_loss = 0.0
+        mean_d_loss = 0.0
+        epoch_steps = 0
         if not high_res:
             encoder.eval()
         generator.eval()
         discriminator.eval()
-        pbar = tqdm(val_dataloader, position=0, desc='[G loss: -.----][D loss: -.----]')
+        pbar = tqdm(val_dataloader, position=0, desc='val [G loss: -.----][D loss: -.----]')
         for (x_real, labels, insts, bounds) in pbar:
             x_real = x_real.to(device)
             labels = labels.to(device)
@@ -122,10 +125,11 @@ def train(dataloaders, models, optimizers, schedulers, train_config, start_epoch
                         x_real, labels, insts, bounds, encoder, generator, discriminator,
                     )
             
-            mean_g_loss += g_loss.item() / len(train_dataloader)
-            mean_d_loss += d_loss.item() / len(train_dataloader)
+            mean_g_loss += g_loss.item()
+            mean_d_loss += d_loss.item()
+            epoch_steps += 1
 
-            pbar.set_description(desc=f'[G loss: {mean_g_loss:.4f}][D loss: {mean_d_loss:.4f}]')
+            pbar.set_description(desc=f'val [G loss: {mean_g_loss/epoch_steps:.4f}][D loss: {mean_d_loss/epoch_steps:.4f}]')
 
 
 def main():
