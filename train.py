@@ -93,11 +93,11 @@ def train(dataloaders, models, optimizers, schedulers, train_config, start_epoch
 
         if epoch+1 % train_config.save_every == 0:
             torch.save({
-                'e_state_dict': encoder.state_dict(),
-                'g_state_dict': generator.state_dict(),
-                'd_state_dict': discriminator.state_dict(),
-                'g_optimizer': g_optimizer.state_dict(),
-                'd_optimizer': d_optimizer.state_dict(),
+                'e_model_dict': encoder.state_dict(),
+                'g_model_dict': generator.state_dict(),
+                'd_model_dict': discriminator.state_dict(),
+                'g_optim_dict': g_optimizer.state_dict(),
+                'd_optim_dict': d_optimizer.state_dict(),
                 'epoch': epoch,
             }, os.path.join(log_dir, f'epoch={epoch}.pt'))
 
@@ -141,9 +141,9 @@ def main():
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    encoder = instantiate(config.encoder).to(device).apply(weights_init).train()
-    generator = instantiate(config.generator).to(device).apply(weights_init).train()
-    discriminator = instantiate(config.discriminator).to(device).apply(weights_init).train()
+    encoder = instantiate(config.encoder).to(device).apply(weights_init)
+    generator = instantiate(config.generator).to(device).apply(weights_init)
+    discriminator = instantiate(config.discriminator).to(device).apply(weights_init)
 
     if args.high_res:
         g_optimizer = torch.optim.Adam(
